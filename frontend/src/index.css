@@ -1,0 +1,149 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+
+    /* Channels are stored as space-separated RGB so Tailwind alpha modifiers work
+       and a future light theme only needs to redeclare these tokens. */
+    --color-bg: 11 17 32;
+    --color-surface: 17 24 39;
+    --color-surface-raised: 22 32 46;
+    --color-border: 30 42 60;
+    --color-grid: 22 32 46;
+
+    --color-brand-400: 96 165 250;
+    --color-brand-500: 59 130 246;
+    --color-brand-600: 37 99 235;
+
+    --color-critical: 239 68 68;
+    --color-high: 249 115 22;
+    --color-medium: 234 179 8;
+    --color-low: 59 130 246;
+    --color-info: 100 116 135;
+
+    --scrollbar-thumb: 43 57 79;
+    --scrollbar-track: 17 24 39;
+  }
+
+  * {
+    border-color: rgb(var(--color-border));
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-bg font-sans text-slate-200 antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-semibold text-slate-100;
+  }
+
+  ::selection {
+    @apply bg-brand-500/30 text-slate-50;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-500/70 ring-offset-2 ring-offset-bg;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background-color: rgb(var(--scrollbar-track));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: rgb(var(--scrollbar-thumb));
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(var(--color-brand-600));
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--scrollbar-thumb)) rgb(var(--scrollbar-track));
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-card border border-border bg-surface shadow-panel;
+  }
+
+  .metric-card {
+    @apply rounded-card border border-border bg-surface-raised p-4 shadow-panel;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium;
+  }
+
+  .table-shell {
+    @apply rounded-card border border-border bg-surface shadow-panel;
+    overflow-x: auto;
+  }
+
+  .table-shell table {
+    @apply w-full border-collapse text-left text-sm;
+  }
+
+  .table-shell thead th {
+    @apply sticky top-0 z-10 border-b border-border bg-surface-raised px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-400;
+  }
+
+  .table-shell tbody tr {
+    @apply border-b border-border hover:bg-surface-raised/60 last:border-0;
+  }
+
+  .table-shell td {
+    @apply px-3 py-2 align-middle text-slate-200;
+  }
+
+  .input {
+    @apply w-full rounded-md border border-border bg-bg px-3 py-2 text-sm text-slate-100 transition-colors placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn {
+    @apply inline-flex select-none items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply bg-brand-500 text-white hover:bg-brand-600;
+  }
+
+  .btn-ghost {
+    @apply border border-border bg-transparent text-slate-300 hover:bg-surface-raised hover:text-slate-100;
+  }
+
+  .sidebar-link {
+    @apply flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-slate-400 transition-colors hover:bg-surface-raised hover:text-slate-100;
+  }
+
+  .sidebar-link-active {
+    @apply bg-brand-500/10 font-medium text-brand-400 hover:bg-brand-500/20 hover:text-brand-400;
+  }
+}
+
+@layer utilities {
+  .num {
+    @apply font-mono tabular-nums tracking-tight;
+  }
+}

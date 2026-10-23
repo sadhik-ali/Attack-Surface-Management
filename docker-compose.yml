@@ -1,0 +1,102 @@
+name: asm
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-asm}
+      POSTGRES_USER: ${POSTGRES_USER:-asm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [asm_internal]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [asm_internal]
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    environment: &api_environment
+      ASM_APP_ENV: production
+      ASM_SECRET_KEY: ${ASM_SECRET_KEY:?set ASM_SECRET_KEY in .env}
+      ASM_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-asm}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-asm}
+      ASM_REDIS_URL: redis://redis:6379/0
+      ASM_JOB_BACKEND: celery
+      ASM_AUTO_CREATE_SCHEMA: "false"
+      ASM_CORS_ORIGINS: ${ASM_CORS_ORIGINS:-http://localhost:8080}
+      ASM_DISCOVERY_ENABLED: ${ASM_DISCOVERY_ENABLED:-true}
+      ASM_DISCOVERY_OFFLINE: ${ASM_DISCOVERY_OFFLINE:-false}
+      ASM_DEMO_MODE: ${ASM_DEMO_MODE:-false}
+      ASM_RATE_LIMIT_ENABLED: ${ASM_RATE_LIMIT_ENABLED:-true}
+      ASM_RATE_LIMIT_REQUESTS_PER_MINUTE: ${ASM_RATE_LIMIT_REQUESTS_PER_MINUTE:-600}
+    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8010 --proxy-headers --forwarded-allow-ips '*'"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8010/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks: [asm_internal]
+
+  worker:
+    build: ./backend
+    restart: unless-stopped
+    environment: *api_environment
+    command: ["celery", "-A", "app.jobs.tasks.celery_app", "worker", "--loglevel=INFO", "--concurrency=2"]
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [asm_internal]
+
+  web:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${ASM_WEB_PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [asm_internal]
+
+  # Optional local-demo seed. Clearly labelled sample data; never run against a
+  # production database. Enable with: docker compose --profile demo run --rm seed
+  seed:
+    build: ./backend
+    profiles: ["demo"]
+    environment:
+      ASM_APP_ENV: development
+      ASM_SECRET_KEY: ${ASM_SECRET_KEY:?set ASM_SECRET_KEY in .env}
+      ASM_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-asm}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-asm}
+      ASM_DEMO_MODE: "true"
+    command: ["python", "-m", "app.seed", "--reset", "--companies", "3"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [asm_internal]
+
+volumes:
+  postgres_data:
+
+networks:
+  asm_internal:
+    driver: bridge

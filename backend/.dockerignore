@@ -1,0 +1,10 @@
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+tests
+test_asm.db
+test_asm.db-wal
+test_asm.db-shm
+asm.db
+.env

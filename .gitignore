@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+backend/asm.db
+backend/asm.db-wal
+backend/asm.db-shm
+backend/test_asm.db
+backend/test_asm.db-wal
+backend/test_asm.db-shm
+
+# Node / build output
+node_modules/
+frontend/dist/
+npm-install.log
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

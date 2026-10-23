@@ -1,0 +1,10 @@
+ASM backend migrations
+Development uses SQLite: alembic.ini carries no URL, env.py reads ASM_DATABASE_URL.
+With ASM_AUTO_CREATE_SCHEMA=true (the default) the API calls create_schema() at
+startup, so a dev database needs no Alembic step; migrations remain the source of truth.
+Production sets ASM_AUTO_CREATE_SCHEMA=false and runs `alembic upgrade head` before
+the API starts; asyncpg URLs are used directly by the async env.py.
+Add a revision: ASM_DATABASE_URL=... python -m alembic revision --autogenerate -m "x",
+review the generated ops, then test upgrade head and downgrade -1 on a scratch SQLite file.
+Caveat: enum columns are VARCHAR with no CHECK constraint because SAEnum uses
+create_constraint=False, so neither create_all nor this migration adds one.

@@ -1,0 +1,8 @@
+# Production-only extras: installed inside the Linux containers in docker-compose.
+# Kept separate from requirements.txt because asyncpg ships no Windows wheels,
+# and Celery/Redis are only reachable in the compose topology.
+-r requirements.txt
+asyncpg==0.30.0
+celery==5.4.0
+redis==5.2.1
+uvicorn[standard]==0.34.0
